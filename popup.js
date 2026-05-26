@@ -1,39 +1,69 @@
 const toggleBtn = document.getElementById('toggleBtn');
+const resetBtn = document.getElementById('resetBtn');
 
-// Check current status when popup opens
-chrome.storage.local.get(['isWorkdayActive'], (result) => {
-  if (result.isWorkdayActive) {
-    setButtonUI(true);
-  } else {
-    setButtonUI(false);
-  }
-});
+const checkboxes = {
+  water: document.getElementById('water'),
+  breathing: document.getElementById('breathing'),
+  stretch: document.getElementById('stretch'),
+  gratitude: document.getElementById('gratitude'),
+  kegels: document.getElementById('kegels')
+};
 
-toggleBtn.addEventListener('click', () => {
-  chrome.storage.local.get(['isWorkdayActive'], (result) => {
-    const currentState = !!result.isWorkdayActive;
-    const newState = !currentState;
+// 1. LOAD SAVED PREFERENCES WHEN POPUP OPENS
+function loadPreferences() {
+  chrome.storage.local.get(['isWorkdayActive', 'water', 'breathing', 'stretch', 'gratitude', 'kegels'], (result) => {
+    console.log("📦 Loaded from storage:", result);
 
-    chrome.storage.local.set({ isWorkdayActive: newState }, () => {
-      setButtonUI(newState);
-      
-      if (newState) {
-        // Start the 45-minute alarm
-        chrome.runtime.sendMessage({ action: "startTimer" });
-      } else {
-        // Stop the alarm
-        chrome.runtime.sendMessage({ action: "stopTimer" });
-      }
+    // Restore Workday Button state
+    setButtonUI(!!result.isWorkdayActive);
+    
+    // Restore Checkboxes (default to true if undefined)
+    Object.keys(checkboxes).forEach(key => {
+      checkboxes[key].checked = result[key] !== false;
+    });
+  });
+}
+
+loadPreferences();
+
+// 2. SAVE PREFERENCES IMMEDIATELY WHEN USER TICKS/UNTICKS
+Object.keys(checkboxes).forEach(key => {
+  checkboxes[key].addEventListener('change', (e) => {
+    const status = e.target.checked;
+    chrome.storage.local.set({ [key]: status }, () => {
+      console.log(`💾 Saved: ${key} is now ${status}`);
     });
   });
 });
 
-function setButtonUI(isActive) {
-  if (isActive) {
-    toggleBtn.textContent = "Stop Workday";
-    toggleBtn.className = "active";
-  } else {
-    toggleBtn.textContent = "Start Workday";
-    toggleBtn.className = "inactive";
+// 3. TOGGLE WORKDAY BUTTON
+toggleBtn.addEventListener('click', () => {
+  chrome.storage.local.get(['isWorkdayActive'], (result) => {
+    const newState = !result.isWorkdayActive;
+    
+    chrome.storage.local.set({ isWorkdayActive: newState }, () => {
+      setButtonUI(newState);
+      chrome.runtime.sendMessage({ action: newState ? "startTimer" : "stopTimer" });
+    });
+  });
+});
+
+// 4. RESET STORAGE ENGINE (NEW)
+resetBtn.addEventListener('click', () => {
+  if (confirm("Are you sure you want to reset all data and options?")) {
+    // Stop any active workday alarms first
+    chrome.runtime.sendMessage({ action: "stopTimer" });
+    
+    // Clear out the database entirely
+    chrome.storage.local.clear(() => {
+      console.log("🧼 Storage completely wiped clear.");
+      // Reload the panel layout back to pristine defaults
+      loadPreferences();
+    });
   }
+});
+
+function setButtonUI(isActive) {
+  toggleBtn.textContent = isActive ? "Stop Workday" : "Start Workday";
+  toggleBtn.className = isActive ? "active" : "inactive";
 }

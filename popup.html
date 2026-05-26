@@ -3,22 +3,75 @@
 <head>
   <meta charset="utf-8">
   <style>
-  body { 
-    width: 200px; 
-    height: 150px; /* Forces Chrome to give it space */
-    padding: 10px; 
-    font-family: sans-serif; 
-    text-align: center; 
-    background-color: white; /* Ensures it isn't transparent */
-  }
-  button { width: 100%; padding: 8px; margin-top: 5px; cursor: pointer; }
-  .active { background-color: #ff4d4d; color: white; }
-  .inactive { background-color: #4CAF50; color: white; }
-</style>
+    body {
+      width: 240px;
+      padding: 16px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background-color: #FBF9F6;
+      color: #4A4743;
+      margin: 0;
+    }
+    h3 { margin-top: 0; color: #606C5D; font-size: 1.1rem; text-align: center; }
+    .preferences {
+      background: #FFF;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .checkbox-group input {
+      margin-right: 10px;
+      accent-color: #94A684;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .active { background-color: #DCAE96; color: white; }
+    .inactive { background-color: #94A684; color: white; }
+    
+    /* New Reset Link Styling */
+    hr { border: 0; border-top: 1px solid #EAE6DF; margin: 16px 0 12px 0; }
+    .reset-link {
+      display: block;
+      font-size: 0.75rem;
+      color: #A39E93;
+      text-decoration: none;
+      text-align: center;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .reset-link:hover { color: #ff4d4d; }
+  </style>
 </head>
 <body>
   <h3>Take care Sis 🌸</h3>
+  
+  <div class="preferences">
+    <label class="checkbox-group"><input type="checkbox" id="water" checked> Drink Water 💧</label>
+    <label class="checkbox-group"><input type="checkbox" id="breathing" checked> Breathing Exercise 🧘‍♀️</label>
+    <label class="checkbox-group"><input type="checkbox" id="stretch" checked> Active Stretch 🤸‍♀️</label>
+    <label class="checkbox-group"><input type="checkbox" id="gratitude" checked> Gratitude Reminder ✨</label>
+    <label class="checkbox-group"><input type="checkbox" id="kegels" checked> Kegel Exercises 😉</label>
+  </div>
+
   <button id="toggleBtn" class="inactive">Start Workday</button>
+  
+  <hr>
+  <a id="resetBtn" class="reset-link">Reset App Data</a>
+
   <script src="popup.js"></script>
 </body>
 </html>

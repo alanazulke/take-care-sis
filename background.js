@@ -1,45 +1,41 @@
-console.log("🌸 Take Care Sis: Service Worker is active.");
+console.log("🌸 Take Care Sis: Service Worker active.");
 
-const adviceList = [
-  "Time for a sip of water! Stay hydrated, sis. 💧",
-  "Let's do a 4-7-8 breathing exercise. Inhale... hold... exhale. 🧘‍♀️",
-  "Stand up and do an active stretch. Roll those shoulders!",
-  "Take 30 seconds to think of one thing you're deeply grateful for today. ✨",
-  "Quick reminder: engage your core and do a quick set of Kegels. 😉"
-];
-
-// Listen for messages from the popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startTimer") {
-    console.log("🚀 Workday started. Alarm scheduled for every 45 minutes.");
-    
-    // CHANGED: Set to 45 minutes for your actual workday
+    // Keeps the 45-minute production interval
     chrome.alarms.create("workdayAlarm", { periodInMinutes: 45 }); 
+    console.log("⏰ Alarm scheduled for every 45 minutes.");
     
-    // Optional: Trigger one immediately so you know it started, or leave it silent until the first 45 mins are up!
-    triggerNotification("Workday started! I'll remind you to take care of yourself every 45 minutes. 🌸");
-
+    // Trigger an instant preview tab using the safe path resolver
+    triggerBreakTab();
   } else if (message.action === "stopTimer") {
     chrome.alarms.clear("workdayAlarm");
-    console.log("🛑 Workday stopped. Alarm cleared.");
+    console.log("🛑 Alarm cleared.");
   }
 });
 
-// Listen for the alarm loop
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === "workdayAlarm") {
-    const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
-    triggerNotification(randomAdvice);
+    triggerBreakTab();
   }
 });
 
-// Helper function to keep code clean
-function triggerNotification(messageText) {
-  chrome.notifications.create({
-    type: "basic",
-    iconUrl: "icon.png",
-    title: "Take care Sis! 🌸",
-    message: messageText,
-    priority: 2
+function triggerBreakTab() {
+  const options = ['water', 'breathing', 'stretch', 'gratitude', 'kegels'];
+  
+  chrome.storage.local.get(options, (result) => {
+    // Filter to find which types the user enabled
+    const activeTypes = options.filter(opt => result[opt] !== false);
+    
+    // Fallback if nothing is selected
+    const chosenType = activeTypes.length > 0 
+      ? activeTypes[Math.floor(Math.random() * activeTypes.length)]
+      : 'water';
+
+    // BEST PRACTICE: Force Chrome to resolve the full internal path
+    const targetUrl = chrome.runtime.getURL(`break.html?type=${chosenType}`);
+    console.log("🚀 Launching explicit path:", targetUrl);
+
+    chrome.tabs.create({ url: targetUrl });
   });
 }
