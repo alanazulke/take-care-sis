@@ -4,21 +4,29 @@
   <meta charset="utf-8">
   <style>
     body {
-      width: 240px;
+      width: 260px;
       padding: 16px;
       font-family: system-ui, -apple-system, sans-serif;
       background-color: #FBF9F6;
       color: #4A4743;
       margin: 0;
     }
-    h3 { margin-top: 0; color: #606C5D; font-size: 1.1rem; text-align: center; }
-    .preferences {
+
+    h3 {
+      margin-top: 0;
+      color: #606C5D;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+
+    .panel {
       background: #FFF;
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
+
     .checkbox-group {
       display: flex;
       align-items: center;
@@ -26,10 +34,45 @@
       font-size: 0.9rem;
       cursor: pointer;
     }
+
     .checkbox-group input {
       margin-right: 10px;
       accent-color: #94A684;
     }
+
+    label.timer-label {
+      display: block;
+      font-size: 0.82rem;
+      color: #606C5D;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    select,
+    input[type="number"] {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #EAE6DF;
+      border-radius: 6px;
+      padding: 8px;
+      font: inherit;
+      background: #FBF9F6;
+      color: #4A4743;
+      margin-bottom: 8px;
+    }
+
+    input[type="number"]:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .tiny-note {
+      font-size: 0.74rem;
+      line-height: 1.35;
+      color: #8A857E;
+      margin: 0;
+    }
+
     button {
       width: 100%;
       padding: 10px;
@@ -39,11 +82,23 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-    .active { background-color: #DCAE96; color: white; }
-    .inactive { background-color: #94A684; color: white; }
-    
-    /* New Reset Link Styling */
-    hr { border: 0; border-top: 1px solid #EAE6DF; margin: 16px 0 12px 0; }
+
+    .active {
+      background-color: #DCAE96;
+      color: white;
+    }
+
+    .inactive {
+      background-color: #94A684;
+      color: white;
+    }
+
+    hr {
+      border: 0;
+      border-top: 1px solid #EAE6DF;
+      margin: 16px 0 12px 0;
+    }
+
     .reset-link {
       display: block;
       font-size: 0.75rem;
@@ -53,13 +108,41 @@
       cursor: pointer;
       transition: color 0.2s;
     }
-    .reset-link:hover { color: #ff4d4d; }
+
+    .reset-link:hover {
+      color: #ff4d4d;
+    }
   </style>
 </head>
 <body>
   <h3>Take care Sis 🌸</h3>
-  
-  <div class="preferences">
+
+  <div class="panel">
+    <label class="timer-label" for="breakIntervalPreset">Break rhythm</label>
+
+    <select id="breakIntervalPreset">
+      <option value="30">Every 30 minutes</option>
+      <option value="45">Every 45 minutes</option>
+      <option value="60">Every 1 hour</option>
+      <option value="custom">Custom</option>
+    </select>
+
+    <input
+      type="number"
+      id="customBreakInterval"
+      min="5"
+      max="180"
+      step="1"
+      placeholder="Custom minutes"
+      disabled
+    >
+
+    <p id="breakIntervalNote" class="tiny-note">
+      First break appears after 45 minutes. A gentle heads-up appears 3 minutes before.
+    </p>
+  </div>
+
+  <div class="panel">
     <label class="checkbox-group"><input type="checkbox" id="water" checked> Drink Water 💧</label>
     <label class="checkbox-group"><input type="checkbox" id="breathing" checked> Breathing Exercise 🧘‍♀️</label>
     <label class="checkbox-group"><input type="checkbox" id="stretch" checked> Active Stretch 🤸‍♀️</label>
@@ -68,11 +151,10 @@
   </div>
 
   <button id="toggleBtn" class="inactive">Start Workday</button>
-  
+
   <hr>
   <a id="resetBtn" class="reset-link">Reset App Data</a>
 
-  <script src="vendor/lottie-player.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
