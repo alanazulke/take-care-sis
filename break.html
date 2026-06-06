@@ -17,14 +17,16 @@
       text-align: center;
     }
     .container {
+      width: 100%;
       max-width: 500px;
       padding: 40px;
       background: white;
       border-radius: 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+      box-sizing: border-box;
     }
     h1 { color: #606C5D; margin-bottom: 8px; font-size: 2rem; }
-    p { font-size: 1.1rem; line-height: 1.6; color: #706C66; min-height: 50px; }
+    p { font-size: 1.1rem; line-height: 1.6; color: #706C66; margin-bottom: 20px; }
     
     /* Interactive Pacing Circle */
     .visual-counter {
@@ -32,7 +34,7 @@
       height: 160px;
       background-color: #94A684;
       border-radius: 50%;
-      margin: 40px auto;
+      margin: 30px auto;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,39 +44,26 @@
       font-size: 1.1rem;
       box-shadow: 0 8px 24px rgba(148, 166, 132, 0.2);
       display: none; 
-      /* Smooth transitions instead of hard keyframes */
       transition: transform 1s ease-in-out, background-color 1s ease-in-out;
       transform: scale(0.9);
     }
+    .visual-counter.expand { transform: scale(1.25); background-color: #DCAE96; }
+    .visual-counter.contract { transform: scale(0.85); background-color: #94A684; }
+    .sub-text { font-size: 0.8rem; font-weight: normal; opacity: 0.8; margin-top: 4px; }
 
-    /* Target states driven by JS timeline */
-    .visual-counter.expand {
-      transform: scale(1.25);
-      background-color: #DCAE96;
-      box-shadow: 0 8px 24px rgba(220, 174, 150, 0.4);
-    }
-    .visual-counter.contract {
-      transform: scale(0.85);
-      background-color: #94A684;
-    }
-
-    .sub-text {
-      font-size: 0.8rem;
-      font-weight: normal;
-      opacity: 0.8;
-      margin-top: 4px;
-    }
-
-    /* Demo Media Placeholder */
+    /* FIXED: Always visible, guaranteed structural footprint */
     .demo-container {
       width: 100%;
-      max-width: 300px;
+      max-width: 280px;
       margin: 20px auto;
-      display: none;
+      min-height: 200px; /* Forces space to exist even before image loads */
+      display: none;     /* Controlled strictly by JS now */
     }
     .demo-container img {
       width: 100%;
+      height: auto;
       border-radius: 12px;
+      display: block;
     }
 
     button.close-btn {
@@ -89,9 +78,7 @@
       font-weight: 600;
       transition: opacity 0.2s;
     }
-    button.close-btn:hover {
-      opacity: 0.9;
-    }
+    button.close-btn:hover { opacity: 0.9; }
   </style>
 </head>
 <body>
@@ -106,7 +93,7 @@
     </div>
 
     <div id="demoBox" class="demo-container">
-      <img id="demoImg" src="" alt="Stretch Demo">
+      <img id="demoImg" src="" alt="Stretch Demonstration">
     </div>
 
     <button id="closeBtn" class="close-btn">Done, back to work</button>
