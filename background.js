@@ -1,8 +1,10 @@
 console.log("🌸 Take Care Sis: Service Worker active.");
 
-const BREAK_INTERVAL_MINUTES = 45;
+const DEFAULT_BREAK_INTERVAL_MINUTES = 45;
 const WARNING_LEAD_MINUTES = 3;
 const SNOOZE_MINUTES = 5;
+const MIN_BREAK_INTERVAL_MINUTES = 5;
+const MAX_BREAK_INTERVAL_MINUTES = 180;
 
 const PRE_BREAK_ALARM = "preBreakWarningAlarm";
 const BREAK_ALARM = "breakAlarm";
@@ -19,13 +21,26 @@ chrome.runtime.onStartup.addListener(() => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === "startTimer") {
     chrome.storage.local.set({ isWorkdayActive: true }, () => {
-      scheduleBreakCycle(BREAK_INTERVAL_MINUTES);
+      scheduleBreakCycleFromPreferences();
       console.log("⏰ Workday started. First break scheduled.");
     });
   }
 
   if (message.action === "stopTimer") {
     stopWorkday();
+  }
+
+  if (message.action === "updateBreakInterval") {
+    const interval = sanitizeBreakInterval(message.breakIntervalMinutes);
+
+    chrome.storage.local.set({ breakIntervalMinutes: interval }, () => {
+      chrome.storage.local.get(["isWorkdayActive"], (result) => {
+        if (result.isWorkdayActive) {
+          scheduleBreakCycle(interval);
+          console.log(`🔁 Break interval updated to ${interval} minutes and schedule restarted.`);
+        }
+      });
+    });
   }
 });
 
@@ -42,13 +57,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.notifications.onButtonClicked.addListener((notificationId, buttonIndex) => {
   if (notificationId !== UPCOMING_BREAK_NOTIFICATION_ID) return;
 
-  // Button 0: Start break now
   if (buttonIndex === 0) {
     chrome.notifications.clear(UPCOMING_BREAK_NOTIFICATION_ID);
     openBreakAndScheduleNextCycle();
   }
 
-  // Button 1: Snooze 5 minutes
   if (buttonIndex === 1) {
     chrome.notifications.clear(UPCOMING_BREAK_NOTIFICATION_ID);
     snoozeBreak();
@@ -62,9 +75,17 @@ chrome.notifications.onClicked.addListener((notificationId) => {
   openBreakAndScheduleNextCycle();
 });
 
+function scheduleBreakCycleFromPreferences() {
+  getBreakIntervalMinutes((interval) => {
+    scheduleBreakCycle(interval);
+  });
+}
+
 function scheduleBreakCycle(minutesUntilBreak) {
+  const safeInterval = sanitizeBreakInterval(minutesUntilBreak);
+
   clearBreakAlarms(() => {
-    const warningDelay = minutesUntilBreak - WARNING_LEAD_MINUTES;
+    const warningDelay = safeInterval - WARNING_LEAD_MINUTES;
 
     if (warningDelay > 0) {
       chrome.alarms.create(PRE_BREAK_ALARM, {
@@ -73,15 +94,16 @@ function scheduleBreakCycle(minutesUntilBreak) {
     }
 
     chrome.alarms.create(BREAK_ALARM, {
-      delayInMinutes: minutesUntilBreak
+      delayInMinutes: safeInterval
     });
 
     chrome.storage.local.set({
-      nextBreakAt: Date.now() + minutesUntilBreak * 60 * 1000,
+      breakIntervalMinutes: safeInterval,
+      nextBreakAt: Date.now() + safeInterval * 60 * 1000,
       snoozedUntil: null
     });
 
-    console.log(`🌸 Next break scheduled in ${minutesUntilBreak} minutes.`);
+    console.log(`🌸 Next break scheduled in ${safeInterval} minutes.`);
   });
 }
 
@@ -94,14 +116,16 @@ function clearBreakAlarms(callback) {
 }
 
 function showUpcomingBreakNotification() {
-  chrome.storage.local.get(["isWorkdayActive"], (result) => {
+  chrome.storage.local.get(["isWorkdayActive", "breakIntervalMinutes"], (result) => {
     if (!result.isWorkdayActive) return;
+
+    const interval = sanitizeBreakInterval(result.breakIntervalMinutes);
 
     chrome.notifications.create(UPCOMING_BREAK_NOTIFICATION_ID, {
       type: "basic",
       iconUrl: "icons/icon128.png",
       title: "Break in 3 minutes 🌸",
-      message: "Wrap up what you’re doing. Your Take care Sis break is almost here.",
+      message: `Wrap up what you’re doing. Your ${interval}-minute Take care Sis break cycle is almost ready.`,
       contextMessage: "Start now or snooze for 5 minutes.",
       buttons: [
         { title: "Start break now" },
@@ -143,7 +167,7 @@ function openBreakAndScheduleNextCycle() {
 
     triggerBreakTab();
 
-    scheduleBreakCycle(BREAK_INTERVAL_MINUTES);
+    scheduleBreakCycleFromPreferences();
   });
 }
 
@@ -185,9 +209,35 @@ function restoreBreakScheduleIfNeeded() {
 
     chrome.alarms.get(BREAK_ALARM, (alarm) => {
       if (!alarm) {
-        scheduleBreakCycle(BREAK_INTERVAL_MINUTES);
+        scheduleBreakCycleFromPreferences();
         console.log("♻️ Restored missing break schedule.");
       }
     });
   });
+}
+
+function getBreakIntervalMinutes(callback) {
+  chrome.storage.local.get(["breakIntervalMinutes"], (result) => {
+    callback(sanitizeBreakInterval(result.breakIntervalMinutes));
+  });
+}
+
+function sanitizeBreakInterval(value) {
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_BREAK_INTERVAL_MINUTES;
+  }
+
+  const rounded = Math.round(parsed);
+
+  if (rounded < MIN_BREAK_INTERVAL_MINUTES) {
+    return MIN_BREAK_INTERVAL_MINUTES;
+  }
+
+  if (rounded > MAX_BREAK_INTERVAL_MINUTES) {
+    return MAX_BREAK_INTERVAL_MINUTES;
+  }
+
+  return rounded;
 }
