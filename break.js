@@ -6,7 +6,7 @@ const stretchPool = [
     file: "stretches/cobra.gif"
   },
   {
-    title: "Cozy Child's Pose 🧘‍♀️",
+    title: "Warrior 🧘‍♀️",
     instruction: "From a standing position, one leg is rooted and perpendicular to the earth while the other leg is raised, extended back and parallel to the earth.",
     file: "stretches/warrior_iii.gif"
   },
